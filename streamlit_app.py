@@ -160,10 +160,26 @@ else:
         title=f'Excess CBRs — {model_choice} Model'
     )
 
-fig_disp.add_vline(x=modate_1, line_dash="dash", line_color="red")
-fig_disp.add_annotation(x=modate_1, y=0.011, text="Oct 2020\n(9mo post-Covid)", showarrow=False, font=dict(color="red"))
-fig_disp.add_vline(x=modate_2, line_dash="dash", line_color="blue")
-fig_disp.add_annotation(x=modate_2, y=0.011, text="Oct 2022\n(9mo post-Ukraine)", showarrow=False, font=dict(color="blue"))
+fig_disp.add_vline(
+    x=modate_1,
+    line_dash="dash",
+    line_color="black",
+    line_width=0.8,
+    annotation_text="Oct 2020 (9mo post-Covid)",
+    annotation_position="top",
+    annotation_font=dict(color="black", size=10)
+)
+
+fig_disp.add_vline(
+    x=modate_2,
+    line_dash="dash",
+    line_color="black",
+    line_width=0.8,
+    annotation_text="Oct 2022 (9mo post-Ukraine)",
+    annotation_position="top right",
+    annotation_font=dict(color="black", size=10)
+)
+
 fig_disp.update_traces(marker=dict(size=4), selector=dict(mode='markers'))
 fig_disp.update_layout(showlegend=display_regions)
 fig_disp.update_yaxes(range=[-y_range, y_range])
