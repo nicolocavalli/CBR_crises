@@ -143,7 +143,7 @@ if selected_country != "None":
         labels={'modate': 'Modate', 'excess_cbr': 'Excess CBR'},
         title=f'Excess CBRs — {model_choice} Model (highlight: {selected_country})'
     )
-    fig_disp.add_hline(y=0, line_dash='dot', line_color='darkgray', opacity=0.5)
+    fig_disp.add_hline(y=0, line_dash='dot', line_color='darkgray', opacity=1)
 else:
     color_choice = 'region_group' if display_regions else 'country'
     color_seq = px.colors.qualitative.Pastel
