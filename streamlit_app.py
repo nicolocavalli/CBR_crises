@@ -1,5 +1,3 @@
-import patch_pygam  # monkey-patches numpy before anything else
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -10,6 +8,10 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from statsmodels.tsa.arima.model import ARIMA
 from pygam import LinearGAM, s
+import plotly.express as px
+
+# Patch compatibility for NumPy and SciPy (deprecation fix)
+import patch_pygam
 
 # Load data (assumes cbr_data.csv is preprocessed and available)
 cbr_data = pd.read_csv("cbr2012.csv")
@@ -26,7 +28,11 @@ modate_1 = 729  # Oct 2020
 modate_2 = 753  # Oct 2022
 
 if model_choice == "ARIMA":
-    st.info("ARIMA (1,1,1) forecasts are shown only after the training period ends. No training fit is plotted.")
+    st.info("ARIMA forecasts are shown only after the training period ends. No training fit is plotted.")
+
+# Store predictions globally for dispersion
+cbr_data['prediction'] = np.nan
+countries = cbr_data['country'].unique()
 
 # Function to generate model-based trend and CI
 def get_predictions(df, model_type):
@@ -86,9 +92,6 @@ def get_predictions(df, model_type):
         st.warning(f"Prediction error for model {model_type}: {e}")
         return None
 
-# Store predictions globally for dispersion
-cbr_data['prediction'] = np.nan
-countries = cbr_data['country'].unique()
 for country in countries:
     df_country = cbr_data[cbr_data['country'] == country].copy()
     pred = get_predictions(df_country, model_choice)
@@ -97,21 +100,26 @@ for country in countries:
 
 cbr_data['excess_cbr'] = cbr_data['CBR'] - cbr_data['prediction']
 
-# === Dispersion plot FIRST ===
+# === Interactive Dispersion plot with Plotly ===
 st.header("Global Excess CBR Scatterplot")
-fig, ax = plt.subplots(figsize=(12, 6))
-for country in countries:
-    df = cbr_data[cbr_data['country'] == country]
-    ax.scatter(df['modate'], df['excess_cbr'], s=10, alpha=0.6)
-ax.axvline(modate_1, color='red', linestyle='--', label='Oct 2020')
-ax.axvline(modate_2, color='blue', linestyle='--', label='Oct 2022')
-ax.set_title(f'Excess CBRs — {model_choice} Model')
-ax.set_xlabel('Modate')
-ax.set_ylabel('Excess CBR')
-ax.grid(True)
-st.pyplot(fig)
+dispersion_data = cbr_data[['modate', 'country', 'excess_cbr']].dropna()
+fig_disp = px.scatter(
+    dispersion_data,
+    x='modate',
+    y='excess_cbr',
+    color='country',
+    hover_name='country',
+    labels={'modate': 'Modate', 'excess_cbr': 'Excess CBR'},
+    title=f'Excess CBRs — {model_choice} Model'
+)
+fig_disp.add_vline(x=modate_1, line_dash="dash", line_color="red")
+fig_disp.add_vline(x=modate_2, line_dash="dash", line_color="blue")
 
-# === THEN plot per-country charts ===
+clicked_country = st.plotly_chart(fig_disp, use_container_width=True)
+
+# Optionally: focus on a selected country if using session state or click logic (future enhancement)
+
+# === Country-wise plots ===
 for country in countries:
     df_country = cbr_data[cbr_data['country'] == country].copy()
     pred = get_predictions(df_country, model_choice)
