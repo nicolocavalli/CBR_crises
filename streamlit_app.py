@@ -151,9 +151,9 @@ fig_disp.update_yaxes(range=[-y_range, y_range])
 
 if y_range == 0.005:
     if y_range == 0.005 and (
-    (dispersion_data['excess_cbr'] > 0.005).any() or (dispersion_data['excess_cbr'] < -0.005).any()
-):
-    st.warning("Some points exceed ±0.005 and may be clipped. Adjust the y-axis range in the sidebar to display the full series.")
+        (dispersion_data['excess_cbr'] > 0.005).any() or (dispersion_data['excess_cbr'] < -0.005).any()
+    ):
+        st.warning("Some points exceed ±0.005 and may be clipped. Adjust the y-axis range in the sidebar to display the full series.")
 
 st.plotly_chart(fig_disp, use_container_width=True)
 
