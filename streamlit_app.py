@@ -143,18 +143,18 @@ if selected_country != "None":
         labels={'modate': 'Modate', 'excess_cbr': 'Excess CBR'},
         title=f'Excess CBRs — {model_choice} Model (highlight: {selected_country})'
     )
-    if display_regions:
+if display_regions:
     fig_disp.add_hline(y=0, line_dash='dash', line_color='black', opacity=0.6)
 else:
     dispersion_data['region_group'] = dispersion_data['country'].map(region_map)
     color_choice = 'region_group' if display_regions else 'country'
     color_seq = px.colors.qualitative.Pastel
     fig_disp = px.scatter(
-    dispersion_data,
-    x='modate',
-    y='excess_cbr',
-    color=color_choice,
-    color_discrete_sequence=color_seq,
+        dispersion_data,
+        x='modate',
+        y='excess_cbr',
+        color=color_choice,
+        color_discrete_sequence=color_seq,
         hover_name='country',
         labels={'modate': 'Modate', 'excess_cbr': 'Excess CBR'},
         title=f'Excess CBRs — {model_choice} Model'
