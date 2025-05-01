@@ -21,7 +21,7 @@ cbr_data = pd.read_csv("cbr2012.csv")
 st.sidebar.title("Model Options")
 model_choice = st.sidebar.selectbox(
     "Select model:",
-    ["Linear", "Quadratic", "Cubic", "ARIMA", "GAM", "Best fitting OLS model"],
+    ["Linear", "Quadratic", "Cubic", "ARIMA", "GAM", "Best fitting OLS"],
     index=0
 )
 train_start = st.sidebar.selectbox("Training start year:", list(range(2012, 2022 - 4)))
