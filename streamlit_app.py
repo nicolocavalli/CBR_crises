@@ -20,8 +20,14 @@ cbr_data = pd.read_csv("cbr2012.csv")
 # Streamlit sidebar inputs
 st.sidebar.title("Model Options")
 model_choice = st.sidebar.selectbox("Select model:", ["Linear", "Quadratic", "ARIMA", "GAM"], index=0)
-train_start = st.sidebar.selectbox("Training start year:", list(range(2012, 2020 - 4)))
-train_end = st.sidebar.selectbox("Training end year:", list(range(train_start + 4, 2020)), index=(2019 - train_start - 4))
+train_start = st.sidebar.selectbox("Training start year:", list(range(2012, 2022 - 4)))
+year_labels = ["2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020 (during Covid-19)", "2021 (during Covid-19)"]
+year_values = list(range(2016, 2022))
+train_end = st.sidebar.selectbox("Training end year:", year_labels, index=7)
+train_end_val = 2012 + year_labels.index(train_end)
+
+# Sidebar Y-axis range selector
+y_range = st.sidebar.selectbox("Y-axis range for excess CBR", options=[0.005, 0.01], index=0)
 
 st.title("CBR Trends and Excess CBRs by Country")
 
@@ -37,7 +43,7 @@ countries = sorted(cbr_data['country'].unique())
 
 # Function to generate model-based trend and CI
 def get_predictions(df, model_type):
-    df_train = df[(df['year'] >= train_start) & (df['year'] <= train_end)].copy()
+    df_train = df[(df['year'] >= train_start) & (df['year'] <= train_end_val)].copy()
     df_full = df.copy()
 
     if df_train.empty:
@@ -109,6 +115,8 @@ selected_country = st.selectbox("Highlight a specific country:", options=["None"
 
 if selected_country != "None":
     dispersion_data['color'] = dispersion_data['country'].apply(lambda c: "highlight" if c == selected_country else "other")
+    dispersion_data['sort_order'] = dispersion_data['color'].apply(lambda x: 0 if x == 'other' else 1)
+    dispersion_data = dispersion_data.sort_values('sort_order')
     color_map = {"highlight": "red", "other": "lightgray"}
     fig_disp = px.scatter(
         dispersion_data,
@@ -120,7 +128,7 @@ if selected_country != "None":
         labels={'modate': 'Modate', 'excess_cbr': 'Excess CBR'},
         title=f'Excess CBRs — {model_choice} Model (highlight: {selected_country})'
     )
-    fig_disp.add_hline(y=0, line_dash='dot', line_color='darkgray', opacity=0.5)
+    fig_disp.add_hline(y=0, line_dash='dash', line_color='black', opacity=0.6)
 else:
     fig_disp = px.scatter(
         dispersion_data,
@@ -134,10 +142,18 @@ else:
     )
 
 fig_disp.add_vline(x=modate_1, line_dash="dash", line_color="red")
+fig_disp.add_annotation(x=modate_1, y=0.011, text="Oct 2020\n(9mo post-Covid)", showarrow=False, font=dict(color="red"))
 fig_disp.add_vline(x=modate_2, line_dash="dash", line_color="blue")
+fig_disp.add_annotation(x=modate_2, y=0.011, text="Oct 2022\n(9mo post-Ukraine)", showarrow=False, font=dict(color="blue"))
 fig_disp.update_traces(marker=dict(size=4), selector=dict(mode='markers'))
 fig_disp.update_layout(showlegend=False)
-fig_disp.update_yaxes(range=[-0.01, 0.01])
+fig_disp.update_yaxes(range=[-y_range, y_range])
+
+if y_range == 0.005:
+    if y_range == 0.005 and (
+    (dispersion_data['excess_cbr'] > 0.005).any() or (dispersion_data['excess_cbr'] < -0.005).any()
+):
+    st.warning("Some points exceed ±0.005 and may be clipped. Adjust the y-axis range in the sidebar to display the full series.")
 
 st.plotly_chart(fig_disp, use_container_width=True)
 
@@ -165,7 +181,7 @@ for country in ordered_countries:
             forecast_mask = ~np.isnan(mean)
             ax.plot(modate[forecast_mask], mean[forecast_mask], color='purple', linestyle='--', label='ARIMA Forecast')
             ax.fill_between(modate[forecast_mask], lower[forecast_mask], upper[forecast_mask], color='purple', alpha=0.2, label='95% CI')
-            ax.axvline(df_country[df_country['year'] == train_end]['modate'].min(), color='gray', linestyle=':', label='Training End')
+            ax.axvline(df_country[df_country['year'] == train_end_val]['modate'].min(), color='gray', linestyle=':', label='Training End')
         else:
             ax.plot(modate, mean, color='blue', linestyle='--', label=f'{model_choice} Trend')
             ax.fill_between(modate, lower, upper, color='blue', alpha=0.2, label='95% CI')
