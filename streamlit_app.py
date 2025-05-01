@@ -28,6 +28,7 @@ train_end_val = 2012 + year_labels.index(train_end)
 
 # Sidebar Y-axis range selector
 y_range = st.sidebar.selectbox("Y-axis range for excess CBR", options=[0.005, 0.01], index=0)
+display_regions = st.sidebar.checkbox("Display regions", value=False)
 
 st.title("CBR Trends and Excess CBRs by Country")
 
@@ -108,8 +109,6 @@ for country in countries:
 cbr_data['excess_cbr'] = cbr_data['CBR'] - cbr_data['prediction']
 
 # === Interactive Dispersion plot with Plotly ===
-display_regions = st.checkbox("Display regions", value=False)
-
 st.header("Global Excess CBR Scatterplot")
 region_map = {
     'Austria': 'Western Europe', 'Belgium': 'Western Europe', 'France': 'Western Europe', 'Germany': 'Former Soviet Bloc',
