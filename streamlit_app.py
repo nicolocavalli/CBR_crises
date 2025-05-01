@@ -111,15 +111,15 @@ cbr_data['excess_cbr'] = cbr_data['CBR'] - cbr_data['prediction']
 # === Interactive Dispersion plot with Plotly ===
 st.header("Global Excess CBR Scatterplot")
 region_map = {
-    'Austria': 'Western Europe', 'Belgium': 'Western Europe', 'France': 'Western Europe', 'Germany': 'Former Soviet Bloc',
+    'Austria': 'Western Europe', 'Belgium': 'Western Europe', 'France': 'Western Europe', 'Germany': 'Western Europe',
     'Ireland': 'Western Europe', 'Luxembourg': 'Western Europe', 'Netherlands': 'Western Europe', 'Switzerland': 'Western Europe', 'United Kingdom': 'Western Europe',
     'Greece': 'Southern Europe', 'Italy': 'Southern Europe', 'Portugal': 'Southern Europe', 'Spain': 'Southern Europe',
-    'Denmark': 'Nordic', 'Finland': 'Nordic', 'Iceland': 'Nordic', 'Norway': 'Nordic', 'Sweden': 'Nordic',
+    'Canada': 'North America', 'United States of America': 'North America',
     'Bulgaria': 'Former Soviet Bloc', 'Croatia': 'Former Soviet Bloc', 'Czech Republic': 'Former Soviet Bloc', 'Estonia': 'Former Soviet Bloc',
     'Hungary': 'Former Soviet Bloc', 'Latvia': 'Former Soviet Bloc', 'Lithuania': 'Former Soviet Bloc', 'Poland': 'Former Soviet Bloc',
     'Romania': 'Former Soviet Bloc', 'Russian Federation': 'Former Soviet Bloc', 'Serbia': 'Former Soviet Bloc', 'Slovakia': 'Former Soviet Bloc', 'Slovenia': 'Former Soviet Bloc',
-    'Australia': 'Other High-Income', 'Canada': 'Other High-Income', 'Israel': 'Other High-Income', 'Japan': 'Other High-Income',
-    'Korea': 'Other High-Income', 'New Zealand': 'Other High-Income', 'United States of America': 'Other High-Income'
+    'Australia': 'Other High-Income', 'New Zealand': 'Other High-Income', 'Israel': 'Other High-Income', 'Japan': 'Asia', 'Korea': 'Asia',
+    'Iceland': 'Northern Europe', 'Finland': 'Northern Europe', 'Norway': 'Northern Europe', 'Sweden': 'Northern Europe', 'Denmark': 'Northern Europe'
 }
 dispersion_data = cbr_data[['modate', 'country', 'excess_cbr']].dropna()
 # Keep region_map for future grouping or tooltips, but keep country as primary color
