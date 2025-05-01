@@ -110,6 +110,8 @@ cbr_data['excess_cbr'] = cbr_data['CBR'] - cbr_data['prediction']
 
 # === Interactive Dispersion plot with Plotly ===
 st.header("Global Excess CBR Scatterplot")
+
+# Prepare region map and color selection
 region_map = {
     'Austria': 'Western Europe', 'Belgium': 'Western Europe', 'France': 'Western Europe', 'Germany': 'Western Europe',
     'Ireland': 'Western Europe', 'Luxembourg': 'Western Europe', 'Netherlands': 'Western Europe', 'Switzerland': 'Western Europe', 'United Kingdom': 'Western Europe',
@@ -118,13 +120,14 @@ region_map = {
     'Bulgaria': 'Former Soviet Bloc', 'Croatia': 'Former Soviet Bloc', 'Czech Republic': 'Former Soviet Bloc', 'Estonia': 'Former Soviet Bloc',
     'Hungary': 'Former Soviet Bloc', 'Latvia': 'Former Soviet Bloc', 'Lithuania': 'Former Soviet Bloc', 'Poland': 'Former Soviet Bloc',
     'Romania': 'Former Soviet Bloc', 'Russian Federation': 'Former Soviet Bloc', 'Serbia': 'Former Soviet Bloc', 'Slovakia': 'Former Soviet Bloc', 'Slovenia': 'Former Soviet Bloc',
-    'Australia': 'Other High-Income', 'New Zealand': 'Other High-Income', 'Israel': 'Other High-Income', 'Japan': 'Asia', 'Korea': 'Asia',
+    'Australia': 'Other High-Income', 'New Zealand': 'Other High-Income', 'Israel': 'Other High-Income',
+    'Japan': 'Asia', 'Korea': 'Asia',
     'Iceland': 'Northern Europe', 'Finland': 'Northern Europe', 'Norway': 'Northern Europe', 'Sweden': 'Northern Europe', 'Denmark': 'Northern Europe'
 }
+
 dispersion_data = cbr_data[['modate', 'country', 'excess_cbr']].dropna()
-# Keep region_map for future grouping or tooltips, but keep country as primary color
-region_group_map = dispersion_data['country'].map(region_map)
-# Optional: could use this for grouping/filtering if needed
+dispersion_data['region_group'] = dispersion_data['country'].map(region_map)
+region_group_map = dispersion_data['region_group']
 
 selected_country = st.selectbox("Highlight a specific country:", options=["None"] + countries)
 
@@ -137,35 +140,37 @@ if selected_country != "None":
         dispersion_data,
         x='modate',
         y='excess_cbr',
+        color='color',
+        color_discrete_map=color_map,
+        hover_name='country',
+        labels={'modate': 'Modate', 'excess_cbr': 'Excess CBR'},
+        title=f'Excess CBRs — {model_choice} Model (highlight: {selected_country})'
+    )
+    if display_regions:
+        fig_disp.add_hline(y=0, line_dash='dash', line_color='black', opacity=0.6)
+else:
+    color_choice = 'region_group' if display_regions else 'country'
+    color_seq = px.colors.qualitative.Pastel
+    fig_disp = px.scatter(
+        dispersion_data,
+        x='modate',
+        y='excess_cbr',
         color=color_choice,
         color_discrete_sequence=color_seq,
         hover_name='country',
         labels={'modate': 'Modate', 'excess_cbr': 'Excess CBR'},
         title=f'Excess CBRs — {model_choice} Model'
-    )'
     )
     if display_regions:
-    fig_disp.add_hline(y=0, line_dash='dash', line_color='black', opacity=0.6)
-else:
-    dispersion_data['region_group'] = dispersion_data['country'].map(region_map)
-    color_choice = 'region_group' if display_regions else 'country'
-    color_seq = px.colors.qualitative.Pastel
-    fig_disp = px.scatter(
-    dispersion_data,
-    x='modate',
-    y='excess_cbr',
-    color=color_choice,
-    color_discrete_sequence=color_seq,
-        hover_name='country',
-        labels={'modate': 'Modate', 'excess_cbr': 'Excess CBR'},
-        title=f'Excess CBRs — {model_choice} Model'
-    )
+        fig_disp.add_hline(y=0, line_dash='dash', line_color='black', opacity=0.6)
+        fig_disp.update_xaxes(tickformat='%Y-%b')
 
+# Shared post-processing
 fig_disp.add_vline(
     x=modate_1,
     line_dash="dash",
     line_color="black",
-    line_width=0.8,
+    line_width=1,
     annotation_text="Oct 2020 (9mo post-Covid)",
     annotation_position="top",
     annotation_font=dict(color="black", size=10)
@@ -175,7 +180,7 @@ fig_disp.add_vline(
     x=modate_2,
     line_dash="dash",
     line_color="black",
-    line_width=0.8,
+    line_width=1,
     annotation_text="Oct 2022 (9mo post-Ukraine)",
     annotation_position="top right",
     annotation_font=dict(color="black", size=10)
@@ -183,10 +188,6 @@ fig_disp.add_vline(
 fig_disp.update_traces(marker=dict(size=4), selector=dict(mode='markers'))
 fig_disp.update_layout(showlegend=display_regions)
 fig_disp.update_yaxes(range=[-y_range, y_range])
-if display_regions:
-    fig_disp.update_xaxes(tickformat='%Y-%b')
-fig_disp.update_xaxes(matches='x')
-
 
 if y_range == 0.005 and (
     (dispersion_data['excess_cbr'] > 0.005).any() or (dispersion_data['excess_cbr'] < -0.005).any()
