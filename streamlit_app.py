@@ -24,7 +24,7 @@ modate_1 = 729  # Oct 2020
 modate_2 = 753  # Oct 2022
 
 if model_choice == "ARIMA":
-    st.info("ARIMA (1,1,1) forecasts are shown only after the training period ends. No training fit is plotted.")
+    st.info("ARIMA forecasts are shown only after the training period ends. No training fit is plotted.")
 
 # Function to generate model-based trend and CI
 def get_predictions(df, model_type):
@@ -64,18 +64,24 @@ def get_predictions(df, model_type):
         elif model_type == "GAM":
             X_train = df_train['modate'].values.reshape(-1, 1)
             y_train = df_train['CBR'].values
-            gam = LinearGAM(s(0)).fit(X_train, y_train)
-            X_full = df_full['modate'].values.reshape(-1, 1)
-            mean = gam.predict(X_full)
-            ci = gam.prediction_intervals(X_full, width=0.95)
-            pred = pd.DataFrame({
-                'mean': mean,
-                'mean_ci_lower': ci[:, 0],
-                'mean_ci_upper': ci[:, 1]
-            }, index=df_full.index)
-            return pred
+            gam = LinearGAM(s(0))
+            try:
+                gam.fit(X_train, y_train)
+                X_full = df_full['modate'].values.reshape(-1, 1)
+                mean = gam.predict(X_full)
+                ci = gam.prediction_intervals(X_full, width=0.95)
+                pred = pd.DataFrame({
+                    'mean': mean,
+                    'mean_ci_lower': ci[:, 0],
+                    'mean_ci_upper': ci[:, 1]
+                }, index=df_full.index)
+                return pred
+            except Exception as e:
+                st.warning(f"GAM model failed to fit for a country: {e}")
+                return None
 
     except Exception as e:
+        st.warning(f"Prediction error for model {model_type}: {e}")
         return None
 
 # Store predictions globally for dispersion
