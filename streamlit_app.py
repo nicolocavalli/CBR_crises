@@ -7,13 +7,14 @@ from sklearn.linear_model import LinearRegression
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from statsmodels.tsa.arima.model import ARIMA
+from pygam import LinearGAM, s
 
 # Load data (assumes cbr_data.csv is preprocessed and available)
 cbr_data = pd.read_csv("cbr2012.csv")
 
 # Streamlit sidebar inputs
 st.sidebar.title("Model Options")
-model_choice = st.sidebar.selectbox("Select model:", ["Linear", "Quadratic", "ARIMA"], index=0)
+model_choice = st.sidebar.selectbox("Select model:", ["Linear", "Quadratic", "ARIMA", "GAM"], index=0)
 train_start = st.sidebar.selectbox("Training start year:", list(range(2012, 2020 - 4)))
 train_end = st.sidebar.selectbox("Training end year:", list(range(train_start + 4, 2020)), index=(2019 - train_start - 4))
 
@@ -22,9 +23,11 @@ st.title("CBR Trends and Excess CBRs by Country")
 modate_1 = 729  # Oct 2020
 modate_2 = 753  # Oct 2022
 
+if model_choice == "ARIMA":
+    st.info("ARIMA (1,1,1) forecasts are shown only after the training period ends. No training fit is plotted.")
+
 # Function to generate model-based trend and CI
 def get_predictions(df, model_type):
-    result = {}
     df_train = df[(df['year'] >= train_start) & (df['year'] <= train_end)].copy()
     df_full = df.copy()
 
@@ -38,26 +41,44 @@ def get_predictions(df, model_type):
             model = sm.OLS(y_train, X_train).fit()
             X_full = sm.add_constant(df_full['modate'].astype(float))
             pred = model.get_prediction(X_full).summary_frame(alpha=0.05)
+            return pred
 
         elif model_type == "Quadratic":
             df_train['modate_squared'] = df_train['modate'] ** 2
             df_full['modate_squared'] = df_full['modate'] ** 2
             model = smf.ols('CBR ~ modate + modate_squared', data=df_train).fit()
             pred = model.get_prediction(df_full[['modate', 'modate_squared']]).summary_frame(alpha=0.05)
+            return pred
 
         elif model_type == "ARIMA":
             y_train = df_train['CBR'].astype(float)
             model = ARIMA(y_train, order=(1, 1, 1)).fit()
-            forecast = model.get_forecast(steps=len(df_full))
-            pred = forecast.summary_frame(alpha=0.05)
-            pred.index = df_full.index  # align index
+            steps = len(df_full) - len(df_train)
+            if steps <= 0:
+                return None
+            forecast = model.get_forecast(steps=steps).summary_frame(alpha=0.05)
+            pred = pd.DataFrame(index=df_full.index, columns=['mean', 'mean_ci_lower', 'mean_ci_upper'])
+            pred.iloc[-steps:] = forecast[['mean', 'mean_ci_lower', 'mean_ci_upper']].values
+            return pred
 
-        return pred
+        elif model_type == "GAM":
+            X_train = df_train['modate'].values.reshape(-1, 1)
+            y_train = df_train['CBR'].values
+            gam = LinearGAM(s(0)).fit(X_train, y_train)
+            X_full = df_full['modate'].values.reshape(-1, 1)
+            mean = gam.predict(X_full)
+            ci = gam.prediction_intervals(X_full, width=0.95)
+            pred = pd.DataFrame({
+                'mean': mean,
+                'mean_ci_lower': ci[:, 0],
+                'mean_ci_upper': ci[:, 1]
+            }, index=df_full.index)
+            return pred
 
     except Exception as e:
         return None
 
-# Store predictions for all countries first
+# Store predictions globally for dispersion
 cbr_data['prediction'] = np.nan
 countries = cbr_data['country'].unique()
 for country in countries:
@@ -66,7 +87,6 @@ for country in countries:
     if pred is not None:
         cbr_data.loc[df_country.index, 'prediction'] = pred['mean'].values
 
-# Compute excess CBR
 cbr_data['excess_cbr'] = cbr_data['CBR'] - cbr_data['prediction']
 
 # === Dispersion plot FIRST ===
@@ -83,8 +103,7 @@ ax.set_ylabel('Excess CBR')
 ax.grid(True)
 st.pyplot(fig)
 
-# Plotting for each country
-countries = cbr_data['country'].unique()
+# === THEN plot per-country charts ===
 for country in countries:
     df_country = cbr_data[cbr_data['country'] == country].copy()
     pred = get_predictions(df_country, model_choice)
@@ -92,21 +111,27 @@ for country in countries:
     if pred is not None:
         modate = df_country['modate'].astype(float).to_numpy()
         actual = df_country['CBR'].astype(float).to_numpy()
-        mean = pred['mean'].to_numpy()
-        lower = pred['mean_ci_lower'].to_numpy()
-        upper = pred['mean_ci_upper'].to_numpy()
+        mean = pred['mean'].astype(float).to_numpy()
+        lower = pred['mean_ci_lower'].astype(float).to_numpy()
+        upper = pred['mean_ci_upper'].astype(float).to_numpy()
 
-        # Plot for countries
         fig, ax = plt.subplots(figsize=(10, 5))
         ax.scatter(modate, actual, color='black', s=15, label='Actual CBR')
-        ax.plot(modate, mean, color='blue', linestyle='--', label=f'{model_choice} Trend')
-        ax.fill_between(modate, lower, upper, color='blue', alpha=0.2, label='95% CI')
-        ax.axvline(modate_1, color='red', linestyle='--')
-        ax.axvline(modate_2, color='blue', linestyle='--')
+
+        if model_choice == "ARIMA":
+            forecast_mask = ~np.isnan(mean)
+            ax.plot(modate[forecast_mask], mean[forecast_mask], color='purple', linestyle='--', label='ARIMA Forecast')
+            ax.fill_between(modate[forecast_mask], lower[forecast_mask], upper[forecast_mask], color='purple', alpha=0.2, label='95% CI')
+            ax.axvline(df_country[df_country['year'] == train_end]['modate'].min(), color='gray', linestyle=':', label='Training End')
+        else:
+            ax.plot(modate, mean, color='blue', linestyle='--', label=f'{model_choice} Trend')
+            ax.fill_between(modate, lower, upper, color='blue', alpha=0.2, label='95% CI')
+
+        ax.axvline(modate_1, color='red', linestyle='--', label='Oct 2020')
+        ax.axvline(modate_2, color='blue', linestyle='--', label='Oct 2022')
         ax.set_title(f'{country} — {model_choice} Trend')
         ax.set_xlabel('Modate')
         ax.set_ylabel('CBR')
         ax.grid(True)
         ax.legend()
         st.pyplot(fig)
-
