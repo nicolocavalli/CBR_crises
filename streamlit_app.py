@@ -147,7 +147,7 @@ fig_disp.add_vline(
     line_color="black",
     line_width=1,
     annotation_text="Oct 2020 (9mo post-Covid)",
-    annotation_position="top right",
+    annotation_position="top",
     annotation_font=dict(color="black", size=10)
 )
 
