@@ -134,15 +134,16 @@ if selected_country != "None":
     dispersion_data = dispersion_data.sort_values('sort_order')
     color_map = {"highlight": "red", "other": "lightgray"}
     fig_disp = px.scatter(
-        dispersion_data,
-        x='modate',
-        y='excess_cbr',
+    dispersion_data,
+    x='modate',
+    y='excess_cbr',
         color='color',
         color_discrete_map=color_map,
         hover_name='country',
         labels={'modate': 'Modate', 'excess_cbr': 'Excess CBR'},
         title=f'Excess CBRs — {model_choice} Model (highlight: {selected_country})'
     )
+    fig_disp.add_hline(y=0, line_dash='dot', line_color='darkgray', opacity=0.5)
 
 fig_disp.add_vline(
     x=modate_1,
@@ -171,6 +172,7 @@ fig_disp.update_xaxes(range=[modate_min, modate_max])
 fig_disp.update_yaxes(range=[-y_range, y_range])
 if display_regions:
     fig_disp.update_xaxes(tickformat='%Y-%b')
+    fig_disp.add_hline(y=0, line_dash='dot', line_color='darkgray', opacity=0.5)
 modate_min = cbr_data['modate'].min()
 modate_max = cbr_data['modate'].max()
 fig_disp.update_xaxes(range=[modate_min, modate_max], matches='x')
