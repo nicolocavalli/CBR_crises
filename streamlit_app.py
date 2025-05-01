@@ -291,7 +291,9 @@ for country in ordered_countries:
 
         ax.axvline(modate_1, color='red', linestyle='--', label='Oct 2020')
         ax.axvline(modate_2, color='blue', linestyle='--', label='Oct 2022')
-        ax.set_title(f'{country} — {model_choice} Trend')
+        actual_model = best_models.get(country, model_choice)
+        ax.set_title(f'{country} — {actual_model} Trend')
+
         ax.set_xlabel('Modate')
         
         ax.set_ylabel('CBR')
