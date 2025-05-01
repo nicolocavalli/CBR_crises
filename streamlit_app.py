@@ -57,7 +57,20 @@ def get_predictions(df, model_type):
     except Exception as e:
         return None
 
-# Dispersion plot for excess CBRs
+# Plotting for each country
+countries = cbr_data['country'].unique()
+for country in countries:
+    df_country = cbr_data[cbr_data['country'] == country].copy()
+    pred = get_predictions(df_country, model_choice)
+
+    if pred is not None:
+        modate = df_country['modate'].astype(float).to_numpy()
+        actual = df_country['CBR'].astype(float).to_numpy()
+        mean = pred['mean'].to_numpy()
+        lower = pred['mean_ci_lower'].to_numpy()
+        upper = pred['mean_ci_upper'].to_numpy()
+
+        # Dispersion plot for excess CBRs
 st.header("Global Excess CBR Scatterplot")
 cbr_data['prediction'] = np.nan
 for country in countries:
@@ -79,19 +92,7 @@ ax.set_ylabel('Excess CBR')
 ax.grid(True)
 st.pyplot(fig)
 
-# Plotting for each country
-countries = cbr_data['country'].unique()
-for country in countries:
-    df_country = cbr_data[cbr_data['country'] == country].copy()
-    pred = get_predictions(df_country, model_choice)
-
-    if pred is not None:
-        modate = df_country['modate'].astype(float).to_numpy()
-        actual = df_country['CBR'].astype(float).to_numpy()
-        mean = pred['mean'].to_numpy()
-        lower = pred['mean_ci_lower'].to_numpy()
-        upper = pred['mean_ci_upper'].to_numpy()
-
+ # Plot for countries
         fig, ax = plt.subplots(figsize=(10, 5))
         ax.scatter(modate, actual, color='black', s=15, label='Actual CBR')
         ax.plot(modate, mean, color='blue', linestyle='--', label=f'{model_choice} Trend')
