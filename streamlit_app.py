@@ -144,21 +144,23 @@ else:
 fig_disp.add_vline(
     x=modate_1,
     line_dash="dash",
-    line_color="red",
+    line_color="black",
     line_width=1,
     annotation_text="Oct 2020 (9mo post-Covid)",
-    annotation_position="top",
-    annotation_font=dict(color="red", size=10)
+    annotation_position="top left",
+    annotation_font=dict(color="black", size=10)
 )
+
 fig_disp.add_vline(
     x=modate_2,
     line_dash="dash",
-    line_color="blue",
+    line_color="black",
     line_width=1,
     annotation_text="Oct 2022 (9mo post-Ukraine)",
-    annotation_position="top",
-    annotation_font=dict(color="blue", size=10)
+    annotation_position="top right",
+    annotation_font=dict(color="black", size=10)
 )
+
 fig_disp.update_traces(marker=dict(size=4), selector=dict(mode='markers'))
 fig_disp.update_layout(showlegend=False)
 fig_disp.update_yaxes(range=[-y_range, y_range])
