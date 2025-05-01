@@ -1,3 +1,5 @@
+import patch_pygam  # monkey-patches numpy before anything else
+
 import streamlit as st
 import pandas as pd
 import numpy as np
