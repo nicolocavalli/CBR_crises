@@ -146,9 +146,10 @@ if selected_country != "None":
     )
     fig_disp.add_hline(y=0, line_dash='dash', line_color='black', opacity=0.6)
 else:
+    dispersion_data['region_group'] = dispersion_data['country'].map(region_map)
     color_choice = 'region_group' if display_regions else 'country'
-color_seq = px.colors.qualitative.Pastel
-fig_disp = px.scatter(
+    color_seq = px.colors.qualitative.Pastel
+    fig_disp = px.scatter(
     dispersion_data,
     x='modate',
     y='excess_cbr',
