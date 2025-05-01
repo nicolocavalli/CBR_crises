@@ -24,7 +24,7 @@ modate_1 = 729  # Oct 2020
 modate_2 = 753  # Oct 2022
 
 if model_choice == "ARIMA":
-    st.info("ARIMA forecasts are shown only after the training period ends. No training fit is plotted.")
+    st.info("ARIMA (1,1,1) forecasts are shown only after the training period ends. No training fit is plotted.")
 
 # Function to generate model-based trend and CI
 def get_predictions(df, model_type):
