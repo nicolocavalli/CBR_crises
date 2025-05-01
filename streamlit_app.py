@@ -127,6 +127,7 @@ else:
         x='modate',
         y='excess_cbr',
         color='country',
+        color_discrete_sequence=px.colors.qualitative.Pastel,
         hover_name='country',
         labels={'modate': 'Modate', 'excess_cbr': 'Excess CBR'},
         title=f'Excess CBRs — {model_choice} Model'
@@ -136,6 +137,7 @@ fig_disp.add_vline(x=modate_1, line_dash="dash", line_color="red")
 fig_disp.add_vline(x=modate_2, line_dash="dash", line_color="blue")
 fig_disp.update_traces(marker=dict(size=4), selector=dict(mode='markers'))
 fig_disp.update_layout(showlegend=False)
+fig_disp.update_yaxes(range=[-0.01, 0.01])
 
 st.plotly_chart(fig_disp, use_container_width=True)
 
