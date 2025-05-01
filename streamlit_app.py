@@ -143,6 +143,7 @@ if selected_country != "None":
         labels={'modate': 'Modate', 'excess_cbr': 'Excess CBR'},
         title=f'Excess CBRs — {model_choice} Model (highlight: {selected_country})'
     )
+    if display_regions:
     fig_disp.add_hline(y=0, line_dash='dash', line_color='black', opacity=0.6)
 else:
     dispersion_data['region_group'] = dispersion_data['country'].map(region_map)
@@ -159,29 +160,15 @@ else:
         title=f'Excess CBRs — {model_choice} Model'
     )
 
-fig_disp.add_vline(
-    x=modate_1,
-    line_dash="dash",
-    line_color="black",
-    line_width=0.8,
-    annotation_text="Oct 2020 (9mo post-Covid)",
-    annotation_position="top",
-    annotation_font=dict(color="black", size=10)
-)
-
-fig_disp.add_vline(
-    x=modate_2,
-    line_dash="dash",
-    line_color="black",
-    line_width=0.8,
-    annotation_text="Oct 2022 (9mo post-Ukraine)",
-    annotation_position="top right",
-    annotation_font=dict(color="black", size=10)
-)
-
+fig_disp.add_vline(x=modate_1, line_dash="dash", line_color="red")
+fig_disp.add_annotation(x=modate_1, y=0.011, text="Oct 2020\n(9mo post-Covid)", showarrow=False, font=dict(color="red"))
+fig_disp.add_vline(x=modate_2, line_dash="dash", line_color="blue")
+fig_disp.add_annotation(x=modate_2, y=0.011, text="Oct 2022\n(9mo post-Ukraine)", showarrow=False, font=dict(color="blue"))
 fig_disp.update_traces(marker=dict(size=4), selector=dict(mode='markers'))
 fig_disp.update_layout(showlegend=display_regions)
 fig_disp.update_yaxes(range=[-y_range, y_range])
+fig_disp.update_xaxes(matches='x')
+fig_disp.update_layout(xaxis_tickformat='%Y-%b')
 
 if y_range == 0.005 and (
     (dispersion_data['excess_cbr'] > 0.005).any() or (dispersion_data['excess_cbr'] < -0.005).any()
@@ -223,6 +210,8 @@ for country in ordered_countries:
         ax.axvline(modate_2, color='blue', linestyle='--', label='Oct 2022')
         ax.set_title(f'{country} — {model_choice} Trend')
         ax.set_xlabel('Modate')
+        ax.set_xticks(modate)
+        ax.set_xticklabels(pd.to_datetime(df_country['year'].astype(str) + '-' + df_country['month'].astype(str).str.zfill(2)).dt.strftime('%Y-%b'), rotation=45, ha='right')
         ax.set_ylabel('CBR')
         ax.grid(True)
         ax.legend()
