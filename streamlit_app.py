@@ -57,20 +57,24 @@ def get_predictions(df, model_type):
     except Exception as e:
         return None
 
-# Plotting disperstion
-st.header("Global Excess CBR Scatterplot")
+# Store predictions for all countries first
 cbr_data['prediction'] = np.nan
+countries = cbr_data['country'].unique()
 for country in countries:
     df_country = cbr_data[cbr_data['country'] == country].copy()
     pred = get_predictions(df_country, model_choice)
     if pred is not None:
         cbr_data.loc[df_country.index, 'prediction'] = pred['mean'].values
 
+# Compute excess CBR
 cbr_data['excess_cbr'] = cbr_data['CBR'] - cbr_data['prediction']
+
+# === Dispersion plot FIRST ===
+st.header("Global Excess CBR Scatterplot")
 fig, ax = plt.subplots(figsize=(12, 6))
 for country in countries:
     df = cbr_data[cbr_data['country'] == country]
-    ax.scatter(df['modate'], df['excess_cbr'], s=10, alpha=0.6, label=country)
+    ax.scatter(df['modate'], df['excess_cbr'], s=10, alpha=0.6)
 ax.axvline(modate_1, color='red', linestyle='--', label='Oct 2020')
 ax.axvline(modate_2, color='blue', linestyle='--', label='Oct 2022')
 ax.set_title(f'Excess CBRs — {model_choice} Model')
@@ -78,7 +82,6 @@ ax.set_xlabel('Modate')
 ax.set_ylabel('Excess CBR')
 ax.grid(True)
 st.pyplot(fig)
-
 
 # Plotting for each country
 countries = cbr_data['country'].unique()
@@ -106,3 +109,4 @@ for country in countries:
         ax.grid(True)
         ax.legend()
         st.pyplot(fig)
+
