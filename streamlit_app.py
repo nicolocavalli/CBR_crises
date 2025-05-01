@@ -35,7 +35,7 @@ modate_1 = 729  # Oct 2020
 modate_2 = 753  # Oct 2022
 
 if model_choice == "ARIMA":
-    st.info("ARIMA (1,1,1) forecasts are shown only after the training period ends. No training fit is plotted.")
+    st.info("ARIMA forecasts are shown only after the training period ends. No training fit is plotted.")
 
 # Store predictions globally for dispersion
 cbr_data['prediction'] = np.nan
@@ -109,7 +109,19 @@ cbr_data['excess_cbr'] = cbr_data['CBR'] - cbr_data['prediction']
 
 # === Interactive Dispersion plot with Plotly ===
 st.header("Global Excess CBR Scatterplot")
+region_map = {
+    'Austria': 'Western Europe', 'Belgium': 'Western Europe', 'France': 'Western Europe', 'Germany': 'Former Soviet Bloc',
+    'Ireland': 'Western Europe', 'Luxembourg': 'Western Europe', 'Netherlands': 'Western Europe', 'Switzerland': 'Western Europe', 'United Kingdom': 'Western Europe',
+    'Greece': 'Southern Europe', 'Italy': 'Southern Europe', 'Portugal': 'Southern Europe', 'Spain': 'Southern Europe',
+    'Denmark': 'Nordic', 'Finland': 'Nordic', 'Iceland': 'Nordic', 'Norway': 'Nordic', 'Sweden': 'Nordic',
+    'Bulgaria': 'Former Soviet Bloc', 'Croatia': 'Former Soviet Bloc', 'Czech Republic': 'Former Soviet Bloc', 'Estonia': 'Former Soviet Bloc',
+    'Hungary': 'Former Soviet Bloc', 'Latvia': 'Former Soviet Bloc', 'Lithuania': 'Former Soviet Bloc', 'Poland': 'Former Soviet Bloc',
+    'Romania': 'Former Soviet Bloc', 'Russian Federation': 'Former Soviet Bloc', 'Serbia': 'Former Soviet Bloc', 'Slovakia': 'Former Soviet Bloc', 'Slovenia': 'Former Soviet Bloc',
+    'Australia': 'Other High-Income', 'Canada': 'Other High-Income', 'Israel': 'Other High-Income', 'Japan': 'Other High-Income',
+    'Korea': 'Other High-Income', 'New Zealand': 'Other High-Income', 'United States of America': 'Other High-Income'
+}
 dispersion_data = cbr_data[['modate', 'country', 'excess_cbr']].dropna()
+dispersion_data['region_group'] = dispersion_data['country'].map(region_map)
 
 selected_country = st.selectbox("Highlight a specific country:", options=["None"] + countries)
 
@@ -134,42 +146,26 @@ else:
         dispersion_data,
         x='modate',
         y='excess_cbr',
-        color='country',
-        color_discrete_sequence=px.colors.qualitative.Pastel,
+        color='region_group',
+    color_discrete_sequence=px.colors.qualitative.Pastel,
         hover_name='country',
         labels={'modate': 'Modate', 'excess_cbr': 'Excess CBR'},
         title=f'Excess CBRs — {model_choice} Model'
     )
 
-fig_disp.add_vline(
-    x=modate_1,
-    line_dash="dash",
-    line_color="black",
-    line_width=1,
-    annotation_text="Oct 2020 (9mo post-Covid)",
-    annotation_position="top",
-    annotation_font=dict(color="black", size=10)
-)
-
-fig_disp.add_vline(
-    x=modate_2,
-    line_dash="dash",
-    line_color="black",
-    line_width=1,
-    annotation_text="Oct 2022 (9mo post-Ukraine)",
-    annotation_position="top right",
-    annotation_font=dict(color="black", size=10)
-)
-
+fig_disp.add_vline(x=modate_1, line_dash="dash", line_color="red")
+fig_disp.add_annotation(x=modate_1, y=0.011, text="Oct 2020\n(9mo post-Covid)", showarrow=False, font=dict(color="red"))
+fig_disp.add_vline(x=modate_2, line_dash="dash", line_color="blue")
+fig_disp.add_annotation(x=modate_2, y=0.011, text="Oct 2022\n(9mo post-Ukraine)", showarrow=False, font=dict(color="blue"))
 fig_disp.update_traces(marker=dict(size=4), selector=dict(mode='markers'))
-fig_disp.update_layout(showlegend=False)
+fig_disp.update_layout(showlegend=True)
 fig_disp.update_yaxes(range=[-y_range, y_range])
 
 if y_range == 0.005:
     if y_range == 0.005 and (
-        (dispersion_data['excess_cbr'] > 0.005).any() or (dispersion_data['excess_cbr'] < -0.005).any()
-    ):
-        st.warning("Some points exceed ±0.005 and may be clipped. Adjust the y-axis range in the sidebar to display the full series.")
+    (dispersion_data['excess_cbr'] > 0.005).any() or (dispersion_data['excess_cbr'] < -0.005).any()
+):
+    st.warning("Some points exceed ±0.005 and may be clipped. Adjust the y-axis range in the sidebar to display the full series.")
 
 st.plotly_chart(fig_disp, use_container_width=True)
 
