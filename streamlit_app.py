@@ -79,7 +79,7 @@ def get_predictions(df, model_type):
             pred = model.get_prediction(df_full[['modate', 'modate_squared', 'modate_cubed']]).summary_frame(alpha=0.05)
             return pred
 
-        elif model_type == "Best fitting OLS model":
+        elif model_type == "Best fitting OLS":
             best_model = None
             best_error = float('inf')
             best_pred = None
