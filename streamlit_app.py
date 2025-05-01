@@ -108,6 +108,8 @@ for country in countries:
 cbr_data['excess_cbr'] = cbr_data['CBR'] - cbr_data['prediction']
 
 # === Interactive Dispersion plot with Plotly ===
+display_regions = st.checkbox("Display regions", value=False)
+
 st.header("Global Excess CBR Scatterplot")
 region_map = {
     'Austria': 'Western Europe', 'Belgium': 'Western Europe', 'France': 'Western Europe', 'Germany': 'Former Soviet Bloc',
@@ -144,12 +146,14 @@ if selected_country != "None":
     )
     fig_disp.add_hline(y=0, line_dash='dash', line_color='black', opacity=0.6)
 else:
-    fig_disp = px.scatter(
-        dispersion_data,
-        x='modate',
-        y='excess_cbr',
-        color='country',
-    color_discrete_sequence=px.colors.qualitative.Pastel,
+    color_choice = 'region_group' if display_regions else 'country'
+color_seq = px.colors.qualitative.Pastel
+fig_disp = px.scatter(
+    dispersion_data,
+    x='modate',
+    y='excess_cbr',
+    color=color_choice,
+    color_discrete_sequence=color_seq,
         hover_name='country',
         labels={'modate': 'Modate', 'excess_cbr': 'Excess CBR'},
         title=f'Excess CBRs — {model_choice} Model'
@@ -160,10 +164,12 @@ fig_disp.add_annotation(x=modate_1, y=0.011, text="Oct 2020\n(9mo post-Covid)", 
 fig_disp.add_vline(x=modate_2, line_dash="dash", line_color="blue")
 fig_disp.add_annotation(x=modate_2, y=0.011, text="Oct 2022\n(9mo post-Ukraine)", showarrow=False, font=dict(color="blue"))
 fig_disp.update_traces(marker=dict(size=4), selector=dict(mode='markers'))
-fig_disp.update_layout(showlegend=True)
+fig_disp.update_layout(showlegend=display_regions)
 fig_disp.update_yaxes(range=[-y_range, y_range])
 
 if y_range == 0.005 and (
+    (dispersion_data['excess_cbr'] > 0.005).any() or (dispersion_data['excess_cbr'] < -0.005).any()
+):
     (dispersion_data['excess_cbr'] > 0.005).any() or (dispersion_data['excess_cbr'] < -0.005).any()
 ):
     st.warning("Some points exceed ±0.005 and may be clipped. Adjust the y-axis range in the sidebar to display the full series.")
