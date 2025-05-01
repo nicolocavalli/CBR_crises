@@ -9,6 +9,7 @@ import statsmodels.formula.api as smf
 from statsmodels.tsa.arima.model import ARIMA
 from pygam import LinearGAM, s
 import plotly.express as px
+import plotly.graph_objects as go
 
 # Patch compatibility for NumPy and SciPy (deprecation fix)
 import patch_pygam
@@ -119,6 +120,7 @@ if selected_country != "None":
         labels={'modate': 'Modate', 'excess_cbr': 'Excess CBR'},
         title=f'Excess CBRs — {model_choice} Model (highlight: {selected_country})'
     )
+    fig_disp.add_hline(y=0, line_dash='dot', line_color='darkgray', opacity=0.5)
 else:
     fig_disp = px.scatter(
         dispersion_data,
@@ -132,7 +134,7 @@ else:
 
 fig_disp.add_vline(x=modate_1, line_dash="dash", line_color="red")
 fig_disp.add_vline(x=modate_2, line_dash="dash", line_color="blue")
-fig_disp.update_traces(marker=dict(size=6), selector=dict(mode='markers'))
+fig_disp.update_traces(marker=dict(size=4), selector=dict(mode='markers'))
 fig_disp.update_layout(showlegend=False)
 
 st.plotly_chart(fig_disp, use_container_width=True)
