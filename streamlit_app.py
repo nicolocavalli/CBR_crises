@@ -19,7 +19,11 @@ cbr_data = pd.read_csv("cbr2012.csv")
 
 # Streamlit sidebar inputs
 st.sidebar.title("Model Options")
-model_choice = st.sidebar.selectbox("Select model:", ["Linear", "Quadratic", "Cubic", "ARIMA", "GAM"], index=0)
+model_choice = st.sidebar.selectbox(
+    "Select model:",
+    ["Linear", "Quadratic", "Cubic", "ARIMA", "GAM", "Best fitting OLS model"],
+    index=0
+)
 train_start = st.sidebar.selectbox("Training start year:", list(range(2012, 2022 - 4)))
 year_labels = ["2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020 (during Covid-19)", "2021 (during Covid-19)"]
 year_values = list(range(2016, 2022))
@@ -66,7 +70,6 @@ def get_predictions(df, model_type):
             pred = model.get_prediction(df_full[['modate', 'modate_squared']]).summary_frame(alpha=0.05)
             return pred
 
-        # New: Add the Cubic model logic
         elif model_type == "Cubic":
             df_train['modate_squared'] = df_train['modate'] ** 2
             df_train['modate_cubed'] = df_train['modate'] ** 3
@@ -75,6 +78,48 @@ def get_predictions(df, model_type):
             model = smf.ols('CBR ~ modate + modate_squared + modate_cubed', data=df_train).fit()
             pred = model.get_prediction(df_full[['modate', 'modate_squared', 'modate_cubed']]).summary_frame(alpha=0.05)
             return pred
+
+        elif model_type == "Best fitting OLS model":
+            best_model = None
+            best_error = float('inf')
+            best_pred = None
+
+            # Test Linear model
+            try:
+                pred_linear = get_predictions(df, "Linear")
+                error_linear = ((df_train['CBR'] - pred_linear['mean']) ** 2).mean()
+                if error_linear < best_error:
+                    best_model = "Linear"
+                    best_error = error_linear
+                    best_pred = pred_linear
+            except Exception:
+                pass
+
+            # Test Quadratic model
+            try:
+                pred_quadratic = get_predictions(df, "Quadratic")
+                error_quadratic = ((df_train['CBR'] - pred_quadratic['mean']) ** 2).mean()
+                if error_quadratic < best_error:
+                    best_model = "Quadratic"
+                    best_error = error_quadratic
+                    best_pred = pred_quadratic
+            except Exception:
+                pass
+
+            # Test Cubic model
+            try:
+                pred_cubic = get_predictions(df, "Cubic")
+                error_cubic = ((df_train['CBR'] - pred_cubic['mean']) ** 2).mean()
+                if error_cubic < best_error:
+                    best_model = "Cubic"
+                    best_error = error_cubic
+                    best_pred = pred_cubic
+            except Exception:
+                pass
+
+            # Store the best model name in the dataframe
+            df['best_model'] = best_model
+            return best_pred
 
         elif model_type == "ARIMA":
             y_train = df_train['CBR'].astype(float)
@@ -110,11 +155,13 @@ def get_predictions(df, model_type):
         st.warning(f"Prediction error for model {model_type}: {e}")
         return None
 
+best_models = {}
 for country in countries:
     df_country = cbr_data[cbr_data['country'] == country].copy()
     pred = get_predictions(df_country, model_choice)
     if pred is not None:
         cbr_data.loc[df_country.index, 'prediction'] = pred['mean'].values
+        best_models[country] = df_country['best_model'].iloc[0] if 'best_model' in df_country else model_choice
 
 cbr_data['excess_cbr'] = cbr_data['CBR'] - cbr_data['prediction']
 
