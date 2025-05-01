@@ -137,24 +137,25 @@ if selected_country != "None":
         dispersion_data,
         x='modate',
         y='excess_cbr',
-        color='color',
-        color_discrete_map=color_map,
+        color=color_choice,
+        color_discrete_sequence=color_seq,
         hover_name='country',
         labels={'modate': 'Modate', 'excess_cbr': 'Excess CBR'},
-        title=f'Excess CBRs — {model_choice} Model (highlight: {selected_country})'
+        title=f'Excess CBRs — {model_choice} Model'
+    )'
     )
-if display_regions:
+    if display_regions:
     fig_disp.add_hline(y=0, line_dash='dash', line_color='black', opacity=0.6)
 else:
     dispersion_data['region_group'] = dispersion_data['country'].map(region_map)
     color_choice = 'region_group' if display_regions else 'country'
     color_seq = px.colors.qualitative.Pastel
     fig_disp = px.scatter(
-        dispersion_data,
-        x='modate',
-        y='excess_cbr',
-        color=color_choice,
-        color_discrete_sequence=color_seq,
+    dispersion_data,
+    x='modate',
+    y='excess_cbr',
+    color=color_choice,
+    color_discrete_sequence=color_seq,
         hover_name='country',
         labels={'modate': 'Modate', 'excess_cbr': 'Excess CBR'},
         title=f'Excess CBRs — {model_choice} Model'
@@ -179,12 +180,13 @@ fig_disp.add_vline(
     annotation_position="top right",
     annotation_font=dict(color="black", size=10)
 )
-
 fig_disp.update_traces(marker=dict(size=4), selector=dict(mode='markers'))
 fig_disp.update_layout(showlegend=display_regions)
 fig_disp.update_yaxes(range=[-y_range, y_range])
+if display_regions:
+    fig_disp.update_xaxes(tickformat='%Y-%b')
 fig_disp.update_xaxes(matches='x')
-fig_disp.update_layout(xaxis_tickformat='%Y-%b')
+
 
 if y_range == 0.005 and (
     (dispersion_data['excess_cbr'] > 0.005).any() or (dispersion_data['excess_cbr'] < -0.005).any()
@@ -226,8 +228,7 @@ for country in ordered_countries:
         ax.axvline(modate_2, color='blue', linestyle='--', label='Oct 2022')
         ax.set_title(f'{country} — {model_choice} Trend')
         ax.set_xlabel('Modate')
-        ax.set_xticks(modate)
-        ax.set_xticklabels(pd.to_datetime(df_country['year'].astype(str) + '-' + df_country['month'].astype(str).str.zfill(2)).dt.strftime('%Y-%b'), rotation=45, ha='right')
+        
         ax.set_ylabel('CBR')
         ax.grid(True)
         ax.legend()
