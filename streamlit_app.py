@@ -70,7 +70,20 @@ for country in countries:
         lower = pred['mean_ci_lower'].to_numpy()
         upper = pred['mean_ci_upper'].to_numpy()
 
-        # Dispersion plot for excess CBRs
+        # Plot for countries
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.scatter(modate, actual, color='black', s=15, label='Actual CBR')
+        ax.plot(modate, mean, color='blue', linestyle='--', label=f'{model_choice} Trend')
+        ax.fill_between(modate, lower, upper, color='blue', alpha=0.2, label='95% CI')
+        ax.axvline(modate_1, color='red', linestyle='--')
+        ax.axvline(modate_2, color='blue', linestyle='--')
+        ax.set_title(f'{country} — {model_choice} Trend')
+        ax.set_xlabel('Modate')
+        ax.set_ylabel('CBR')
+        ax.grid(True)
+        ax.legend()
+        st.pyplot(fig)
+
 st.header("Global Excess CBR Scatterplot")
 cbr_data['prediction'] = np.nan
 for country in countries:
@@ -91,19 +104,3 @@ ax.set_xlabel('Modate')
 ax.set_ylabel('Excess CBR')
 ax.grid(True)
 st.pyplot(fig)
-
- # Plot for countries
-        fig, ax = plt.subplots(figsize=(10, 5))
-        ax.scatter(modate, actual, color='black', s=15, label='Actual CBR')
-        ax.plot(modate, mean, color='blue', linestyle='--', label=f'{model_choice} Trend')
-        ax.fill_between(modate, lower, upper, color='blue', alpha=0.2, label='95% CI')
-        ax.axvline(modate_1, color='red', linestyle='--')
-        ax.axvline(modate_2, color='blue', linestyle='--')
-        ax.set_title(f'{country} — {model_choice} Trend')
-        ax.set_xlabel('Modate')
-        ax.set_ylabel('CBR')
-        ax.grid(True)
-        ax.legend()
-        st.pyplot(fig)
-
-
