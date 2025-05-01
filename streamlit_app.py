@@ -121,7 +121,9 @@ region_map = {
     'Korea': 'Other High-Income', 'New Zealand': 'Other High-Income', 'United States of America': 'Other High-Income'
 }
 dispersion_data = cbr_data[['modate', 'country', 'excess_cbr']].dropna()
-dispersion_data['region_group'] = dispersion_data['country'].map(region_map)
+# Keep region_map for future grouping or tooltips, but keep country as primary color
+region_group_map = dispersion_data['country'].map(region_map)
+# Optional: could use this for grouping/filtering if needed
 
 selected_country = st.selectbox("Highlight a specific country:", options=["None"] + countries)
 
@@ -146,7 +148,7 @@ else:
         dispersion_data,
         x='modate',
         y='excess_cbr',
-        color='region_group',
+        color='country',
     color_discrete_sequence=px.colors.qualitative.Pastel,
         hover_name='country',
         labels={'modate': 'Modate', 'excess_cbr': 'Excess CBR'},
@@ -161,11 +163,12 @@ fig_disp.update_traces(marker=dict(size=4), selector=dict(mode='markers'))
 fig_disp.update_layout(showlegend=True)
 fig_disp.update_yaxes(range=[-y_range, y_range])
 
-if y_range == 0.005:
-    if y_range == 0.005 and (
-        (dispersion_data['excess_cbr'] > 0.005).any() or (dispersion_data['excess_cbr'] < -0.005).any()
-    ):
-        st.warning("Some points exceed ±0.005 and may be clipped. Adjust the y-axis range in the sidebar to display the full series.")
+if y_range == 0.005 and (
+    (dispersion_data['excess_cbr'] > 0.005).any() or (dispersion_data['excess_cbr'] < -0.005).any()
+):
+    (dispersion_data['excess_cbr'] > 0.005).any() or (dispersion_data['excess_cbr'] < -0.005).any()
+):
+    st.warning("Some points exceed ±0.005 and may be clipped. Adjust the y-axis range in the sidebar to display the full series.")
 
 st.plotly_chart(fig_disp, use_container_width=True)
 
