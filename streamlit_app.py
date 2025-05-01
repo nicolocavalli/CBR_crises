@@ -19,7 +19,7 @@ cbr_data = pd.read_csv("cbr2012.csv")
 
 # Streamlit sidebar inputs
 st.sidebar.title("Model Options")
-model_choice = st.sidebar.selectbox("Select model:", ["Linear", "Quadratic", "ARIMA", "GAM"], index=0)
+model_choice = st.sidebar.selectbox("Select model:", ["Linear", "Quadratic", "Cubic", "ARIMA", "GAM"], index=0)
 train_start = st.sidebar.selectbox("Training start year:", list(range(2012, 2022 - 4)))
 year_labels = ["2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020 (during Covid-19)", "2021 (during Covid-19)"]
 year_values = list(range(2016, 2022))
@@ -64,6 +64,16 @@ def get_predictions(df, model_type):
             df_full['modate_squared'] = df_full['modate'] ** 2
             model = smf.ols('CBR ~ modate + modate_squared', data=df_train).fit()
             pred = model.get_prediction(df_full[['modate', 'modate_squared']]).summary_frame(alpha=0.05)
+            return pred
+
+        # New: Add the Cubic model logic
+        elif model_type == "Cubic":
+            df_train['modate_squared'] = df_train['modate'] ** 2
+            df_train['modate_cubed'] = df_train['modate'] ** 3
+            df_full['modate_squared'] = df_full['modate'] ** 2
+            df_full['modate_cubed'] = df_full['modate'] ** 3
+            model = smf.ols('CBR ~ modate + modate_squared + modate_cubed', data=df_train).fit()
+            pred = model.get_prediction(df_full[['modate', 'modate_squared', 'modate_cubed']]).summary_frame(alpha=0.05)
             return pred
 
         elif model_type == "ARIMA":
