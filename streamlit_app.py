@@ -103,24 +103,31 @@ cbr_data['excess_cbr'] = cbr_data['CBR'] - cbr_data['prediction']
 # === Interactive Dispersion plot with Plotly ===
 st.header("Global Excess CBR Scatterplot")
 dispersion_data = cbr_data[['modate', 'country', 'excess_cbr']].dropna()
+
+# Optional: country selector for highlight
+selected_country = st.selectbox("Jump to a specific country:", options=sorted(countries))
+
+# Simpler color map to match Matplotlib aesthetic
 fig_disp = px.scatter(
     dispersion_data,
     x='modate',
     y='excess_cbr',
-    color='country',
+    color_discrete_sequence=['gray'],
     hover_name='country',
     labels={'modate': 'Modate', 'excess_cbr': 'Excess CBR'},
     title=f'Excess CBRs — {model_choice} Model'
 )
 fig_disp.add_vline(x=modate_1, line_dash="dash", line_color="red")
 fig_disp.add_vline(x=modate_2, line_dash="dash", line_color="blue")
+fig_disp.update_traces(marker=dict(size=6), selector=dict(mode='markers'))
+fig_disp.update_layout(showlegend=False)
 
-clicked_country = st.plotly_chart(fig_disp, use_container_width=True)
-
-# Optionally: focus on a selected country if using session state or click logic (future enhancement)
+st.plotly_chart(fig_disp, use_container_width=True)
 
 # === Country-wise plots ===
-for country in countries:
+ordered_countries = [selected_country] + [c for c in countries if c != selected_country]
+
+for country in ordered_countries:
     df_country = cbr_data[cbr_data['country'] == country].copy()
     pred = get_predictions(df_country, model_choice)
 
