@@ -134,15 +134,33 @@ if selected_country != "None":
     dispersion_data = dispersion_data.sort_values('sort_order')
     color_map = {"highlight": "red", "other": "lightgray"}
     fig_disp = px.scatter(
-    dispersion_data,
-    x='modate',
-    y='excess_cbr',
+        dispersion_data,
+        x='modate',
+        y='excess_cbr',
         color='color',
         color_discrete_map=color_map,
         hover_name='country',
         labels={'modate': 'Modate', 'excess_cbr': 'Excess CBR'},
         title=f'Excess CBRs — {model_choice} Model (highlight: {selected_country})'
     )
+    fig_disp.add_hline(y=0, line_dash='dot', line_color='darkgray', opacity=0.5)
+else:
+    color_choice = 'region_group' if display_regions else 'country'
+    color_seq = px.colors.qualitative.Pastel
+    dispersion_data['region_group'] = dispersion_data['country'].map(region_map)
+    fig_disp = px.scatter(
+        dispersion_data,
+        x='modate',
+        y='excess_cbr',
+        color=color_choice,
+        color_discrete_sequence=color_seq,
+        hover_name='country',
+        labels={'modate': 'Modate', 'excess_cbr': 'Excess CBR'},
+        title=f'Excess CBRs — {model_choice} Model'
+    )
+    if display_regions:
+        fig_disp.update_xaxes(tickformat='%Y-%b')
+        fig_disp.add_hline(y=0, line_dash='dot', line_color='darkgray', opacity=0.5)
     fig_disp.add_hline(y=0, line_dash='dot', line_color='darkgray', opacity=0.5)
 
 fig_disp.add_vline(
