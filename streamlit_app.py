@@ -24,7 +24,7 @@ model_choice = st.sidebar.selectbox(
     ["Linear", "Quadratic", "Cubic", "ARIMA", "GAM", "Best fitting OLS"],
     index=0
 )
-train_start = st.sidebar.selectbox("Training start year:", list(range(2012, 2022 - 4)), index=3)
+train_start = st.sidebar.selectbox("Training start year:", list(range(2012, 2022 - 4)))
 year_labels = ["2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020 (during Covid-19)", "2021 (during Covid-19)"]
 year_values = list(range(2016, 2022))
 train_end = st.sidebar.selectbox("Training end year:", year_labels, index=7)
