@@ -15,7 +15,7 @@ import plotly.graph_objects as go
 import patch_pygam
 
 # Load data (assumes cbr_data.csv is preprocessed and available)
-cbr_data = pd.read_csv("cbr2012.csv")
+cbr_data = pd.read_csv("cbr_2012.csv")
 
 # Streamlit sidebar inputs
 st.sidebar.title("Model Options")
